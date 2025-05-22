@@ -1,27 +1,22 @@
-#import all of the imports in a seperate document
 from all_imports import *
 
-#imports all of the functions and some variabels for running the app
 from json_file_loading import *
 
 socketio = SocketIO()
 
 def create_app():
-    #setup the basics of the app
     main = Blueprint("main", __name__)
     app = Flask(__name__)
     app.config["DEBUG"] = True
     app.register_blueprint(main)
     socketio.init_app(app)
 
-    #returning the app
     return app
 
 app = create_app()
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///library.db"
 app.config["SQLALCHEMY_BINDS"] = {
     "records_db": "sqlite:///records_library.db"
@@ -33,14 +28,13 @@ app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
 app.config['SESSION_PERMANENT'] = False
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.secret_key = "ben_sucks"  # Change this to a random, secure key
+app.secret_key = "ben_sucks"
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USE_TLS'] = False
 
-#this needs to change to a bergen.org email
 app.config['MAIL_USERNAME'] = "oscarjepsen2007@gmail.com"
 app.config['MAIL_PASSWORD'] = "agda kzab akxo blpa"
 app.config['MAIL_DEFAULT_SENDER'] = "oscarjepsen2007@gmail.com"
@@ -99,7 +93,7 @@ class SessionLog(db.Model):
     date = db.Column(db.Date)
     start_date = db.Column(db.Date)
     subject = db.Column(db.String(255))
-    tutor = db.Column(db.Integer, nullable = False) # Tutor's ID number
+    tutor = db.Column(db.Integer, nullable = False) 
     student = db.Column(db.Integer, nullable = False)
     period = db.Column(db.Integer)
     cancel_reason = db.Column(db.Integer)
@@ -112,7 +106,7 @@ class Session(db.Model):
     date = db.Column(db.Date)
     start_date = db.Column(db.Date)
     subject = db.Column(db.String(255))
-    tutor = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False) # Tutor's ID number
+    tutor = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
     student = db.Column(db.Integer, nullable = False)
     period = db.Column(db.Integer)
     session_history = db.Column(JSON, default = load_session_history_JSON)
@@ -120,7 +114,6 @@ class Session(db.Model):
     closed = db.Column(db.Boolean, default = False)
     recurring = db.Column(db.Boolean, default = False)
     
-    # Relationship to SessionFile
     files = db.relationship('SessionFile', back_populates='session', cascade='all, delete-orphan')
 
 class SessionRequest(db.Model):
@@ -131,18 +124,17 @@ class SessionRequest(db.Model):
     date = db.Column(db.Date)
     start_date = db.Column(db.Date)
     subject = db.Column(db.String(255))
-    tutor = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False) # Tutor's ID number
+    tutor = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
     student = db.Column(db.Integer, nullable = False)
     period = db.Column(db.Integer)
-    time_confirmation_pending = db.Column(db.Integer, nullable=False) #ID of person who has not confirmed time
+    time_confirmation_pending = db.Column(db.Integer, nullable=False)
 
 class SessionFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255))
-    file_data = db.Column(db.LargeBinary)  # Storing the file content
+    file_data = db.Column(db.LargeBinary)
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'), nullable=False)
 
-    # Relationship back to Session
     session = db.relationship('Session', back_populates='files')
 
 class Feedback(db.Model):
@@ -154,7 +146,7 @@ class Feedback(db.Model):
     review_text = db.Column(db.String(255), nullable=True)
     subject = db.Column(db.String(255), nullable=True)
     tutoring = db.Column(db.Boolean, nullable=True)
-    review_for = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False) # Tutor's ID number
+    review_for = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
     review_from = db.Column(db.String(255), nullable = False)
 
 
@@ -184,7 +176,6 @@ period_converter = {
     5:'Before Schoo;'
 }
 
-# Flip the bit at position `bit_position` in the 64-bit binary string
 def flip_bit(user_id:int, day:int, period:int):
     '''
     Changes users Schedule at specified position.
@@ -203,11 +194,9 @@ def flip_bit(user_id:int, day:int, period:int):
     position = day*8 + period
     byte_array = bytearray(binary_data)
 
-    # Calculate which byte and which bit to flip
     byte_index = position // 8
     bit_index = 7-position % 8
 
-    # Flip the bit using XOR
     byte_array[byte_index] ^= (1 << bit_index)
 
     byte_data = bytes(byte_array)
@@ -263,7 +252,6 @@ def temp_function_for_default_user_loading():
             last_name = "Burrido",
             email = "america@gmail.com",
             email_verification_token=None,
-            # schedule_data=json.loads('''{"monday": {"1": {"start_time": "08:30", "end_time": "08:31", "times": " 2024-06-24", "subject": null}, "2": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "3": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "4": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "5": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "6": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "7": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "8": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "9": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "subject": ""}, "tuesday": {"1": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "2": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "3": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "4": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "5": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "6": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "7": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "8": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "9": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "subject": ""}, "wednesday": {"1": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "2": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "3": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "4": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "5": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "6": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "7": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "8": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "9": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "subject": ""}, "thursday": {"1": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "2": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "3": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "4": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "5": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "6": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "7": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "8": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "9": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "subject": ""}, "friday": {"1": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "2": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "3": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "4": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "5": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "6": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "7": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "8": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "9": {"start_time": "00:00", "end_time": "00:00", "times": ""}, "subject": ""}}'''),
             volunteer_hours=0,
             role = 1,
             qualification_data = json.loads('''{"Math": 1, "Algebra": 0, "Science": 0, "Chemistry": 0, "Gym": 0, "Geometry": 0, "Biomolecular Quantum Physics": 0, "English": 0}''')
@@ -388,7 +376,6 @@ with app.app_context():
     db.create_all(bind_key=None)
     db.create_all(bind_key="records_db")
     initialize_period_data()
-    # temp_admin_loading_delete_later()
     temp_function_for_default_user_loading()
 
 
@@ -412,14 +399,11 @@ def load_user(user_id):
 def inject_profile_image():
     included_endpoints = ['index','find_session','user_messages','scheduler','profile',"admin_temp_route","tag_managing","user_managing","approve_hours","view","user_uploads"]
 
-    # Get the current endpoint
     current_endpoint = request.endpoint
 
-    # Check if the current endpoint is in the excluded list
     if current_endpoint not in included_endpoints:
         return {}
 
-    # If not excluded, inject the profile image
     profile_image = base64.b64encode(current_user.image_data).decode('utf-8') if current_user.image_data else None
     return {'profile_image':profile_image}
 
@@ -457,7 +441,7 @@ def admin_only(f):
 def verify_email(token):
     user = User.query.filter_by(email_verification_token=token).first()
     if user:
-        user.email_verification_token = None  # Clear the token once it's used
+        user.email_verification_token = None 
         db.session.commit()
         flash("Your email has been verified!", "success")
         return redirect(url_for('login'))
@@ -482,10 +466,8 @@ def send_verification_email():
 @email_verified_required
 @check_for_closed_session
 def user_messages():
-    #gets the session currently being viewed
     ID = request.args.get('identification')
     open_session = Session.query.get(ID)
-    #gets the message history associated with the session
     message_history = ActiveMessageHistory.query.get(open_session.message_history_id)
 
     message_history.missed[str(current_user.id)] = message_history.missed['total']
@@ -501,7 +483,6 @@ def user_messages():
     other = other.username
 
     messages = message_history.messages['list']
-    #the next line is a horribly inefficient bit of code, pls fix it
     messages = [{'mine': True if i['sender'] == current_user.id else False,'message':i['message'],'sender':User.query.get(i['sender']).username}  for i in messages]
     return render_template('user_messages.html',
                            recipient = other,
@@ -625,7 +606,6 @@ def handle_connect():
 
 @socketio.on("user_join")
 def handle_user_join(user_id,history_id):
-    #gets the message history associated and updates the room id
     history = ActiveMessageHistory.query.get(history_id)
     history.people[user_id] = request.sid
     flag_modified(history,'people')
@@ -641,10 +621,8 @@ def handle_new_message(message,sending_user_id,history_id,session_id):
     other = choose[0] if choose[0] != str(sending_user.id) else choose[1]
     other = User.query.get(other)
 
-    #saves all messages to the database
     history.messages['list'].append({'message':message,'sender':int(sending_user_id)})
 
-    #updates the total amount of messages and the ones a person has recieved
     history.missed[sending_user_id] += 1
     history.missed['total'] += 1
     flag_modified(history,'missed')
@@ -662,7 +640,6 @@ def handle_recieved_chat_message(other_id,history_id):
     history = ActiveMessageHistory.query.get(history_id)
     print(history.missed)
     history.missed[other_id] += 1
-    # history.missed[str(current_user.id)] = history.missed['total']
     flag_modified(history,'missed')
     db.session.commit()
 
@@ -683,7 +660,6 @@ def delete_notification():
         return jsonify({"success": True})
     return jsonify({"success": False})
 
-# to prevent needing to change all the html file templates
 @app.route('/index.html')
 def reroute_user():
     return redirect(url_for('index'))
@@ -719,7 +695,6 @@ def tag_managing():
 @email_verified_required
 @check_for_closed_session
 def index():
-    #redirects if not logged
 
     if not current_user or not current_user.is_authenticated:return redirect(url_for('login'))
 
@@ -816,14 +791,12 @@ def logout():
 @app.route('/register', methods = ['POST','GET'])
 def register():
     if request.method == "POST":
-        # Get form data
         name = request.form.get("name")
         last_name = request.form.get("last_name")
         email = request.form.get("email")
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
         username = request.form.get("username")
-        # Validate form data (add your own validation logic)
         if not (
             name
             and last_name
@@ -832,22 +805,17 @@ def register():
             and confirm_password
             and username
         ):
-        # Handle invalid input
             flash("Please fill in all fields.", "danger")
             return render_template("user_handling/register.html")
-        #handle if existing user
         user = User.query.filter_by(username=username).first()
         if user is not None:
-            # Handle email overlap
             flash("User already exist! Try a different username", "danger")
             return render_template("user_handling/register.html")
         user = User.query.filter_by(email=email).first()
         if user is not None:
-            # Handle email overlap
             flash("User already exist! Try a different email", "danger")
             return render_template("user_handling/register.html")
         if password != confirm_password:
-            # Handle password mismatch
             flash("Passwords do not match.", "danger")
             return render_template("user_handling/register.html")
 
@@ -860,7 +828,6 @@ def register():
         )
         new_user.set_password(password)
 
-        # Save the new user to the database
         db.session.add(new_user)
         db.session.commit()
 
@@ -881,15 +848,9 @@ def terminate_session():
     if request.method == "POST":
 
         cancel_reason = request.form.get("cancel_reason")
-        ##############################################################################################################################
 
         finished = int(request.form.get('had_class'))
         cancel_reason = 4 if not cancel_reason else cancel_reason
-        ##############################################################################################################################
-
-                                            # for final product, there needs to be a more reliable way to tell if class happened than this #
-
-        ##############################################################################################################################
 
         params = {"repeat":request.form.get("repeating_session"),"id":id,"cancel_reason":cancel_reason}
         if request.form.get("repeating_session") == "1":
@@ -904,7 +865,6 @@ def terminate_session():
 def complete_session():
     id = request.args.get("id")
     session = Session.query.get(id)
-    # fill_form = int(request.args.get('form'))
 
     session_log = SessionLog(
         tutor = session.tutor,
@@ -926,14 +886,6 @@ def complete_session():
     
     db.session.commit()
 
-    # delete the session and add community service hours to the user
-
-########################################################################################################################
-    
-    #The code need to be abnle to check for the time of start and time of end as well as the date            
-    #what are you talking about? - Oscar
-
-##########################################################################################
     tutor = User.query.get(session.tutor)
     datetime1 = datetime.combine(datetime.today(), session.end_time)
     datetime2 = datetime.combine(datetime.today(), session.start_time)
@@ -942,12 +894,6 @@ def complete_session():
 
     total_days = count_weekdays_between(session.start_date,datetime.today(),session.day_of_the_week)
 
-##########################################################################################
-
-        # Put in the if statement in the final product
-
-##########################################################################################
-
     # if total_days > 0:
     if True:
         tutor.hours_of_service += round(float(difference),2)
@@ -955,11 +901,7 @@ def complete_session():
         tutor.volunteer_hours["breakdown"].append({"start_date":session.start_date.strftime("%B %d, %Y"), "end_date":datetime.today().strftime("%B %d, %Y"),"hours":round(float(difference) * total_days,2)})
         flag_modified(tutor,"volunteer_hours")
         db.session.commit()
-    ##############################################################################################################################
 
-                                        # add for final product #
-
-    ##############################################################################################################################
     # date = session.date
     # today = datetime.now().date()
     # if date >= today:
@@ -980,8 +922,6 @@ lower_days = ['monday','tuesday','wednesday','thursday','friday']
 @login_required
 @email_verified_required
 @check_for_closed_session
-# options=options,    options = load_available_classes()
-
 def find_session():
     day, date = None, None
     tutor_name = ''
@@ -1015,7 +955,6 @@ def find_session():
                             user = User.query.get(user_id)
                             if user.qualification_data[subject]:
                                 results.append([user.username,period,find_next_day_of_week(day),user_id])
-        # if period is not specified
         else:
             if date:
                 day = date_to_day(date)
@@ -1026,38 +965,6 @@ def find_session():
                             results.append([user.username,period,find_next_day_of_week(day),user_id])
             else:
                 pass
-                # Send message saying that you need to specify either date or time
-        # send to the front end, use jinja if to only show the session if that tutor is assigned
-        # if period != '-1':
-        #     data = Periods.query.get(int(period))
-        #     if date:
-        #         day = date_to_day(date)
-        #         data = getattr(data, day, 'defualt')
-        #         user_names = [(User.query.get(int(id)).username,int(id),period,date,User.query.get(int(id)).qualification_data) for id in data.split(' ')[1:]]
-        #         users = [User.query.get(int(id)).schedule_data[day][period] for id in data.split(' ')[1:]]
-        #     else:
-        #         for day in lower_days:
-        #             day_data = getattr(data, day, 'defualt')
-        #             # adding data to existing lists, could probably be done with map
-        #             [user_names.append((User.query.get(int(id)).username,int(id),period,find_next_day_of_week(day),User.query.get(int(id)).qualification_data)) for id in day_data.split(' ')[1:]]
-        #             [users.append(User.query.get(int(id)).schedule_data[day][period]) for id in day_data.split(' ')[1:]]
-
-        # elif date:
-        #     day = date_to_day(date)
-        #     day_data = [getattr(Periods.query.get(i),day) for i in range(1,10)]
-        #     for period,period_data in enumerate(day_data):
-        #         if period_data:
-        #             # adding data to existing lists, could probably be done with map
-        #             [user_names.append((User.query.get(int(id)).username,int(id),period+1,date,User.query.get(int(id)).qualification_data)) for id in period_data.split(' ')[1:]]
-        #             [users.append(User.query.get(int(id)).schedule_data[day][str(period+1)]) for id in period_data.split(' ')[1:]]
-        # elif subject or tutor_name:
-        #     for period in range(1,10):
-        #         for temp in [(getattr(Periods.query.get(period), day, 'default'),day) for day in lower_days]:
-        #             for id in temp[0].split(' ')[1:]:
-        #                 user = User.query.get(int(id))
-        #                 [user_names.append((user.username,int(id),period,find_next_day_of_week(temp[1]),user.qualification_data))]
-        #                 [users.append(user.schedule_data[temp[1]][str(period)])]
-
         return render_template('find_session.html', results = results,tutor_name=tutor_name.lower(),type=request.method,subject=subject,options=options)
     
 
@@ -1110,7 +1017,6 @@ def delete_session(session_id):
         
         db.session.delete(session)
 
-        #this deletes the message history. If you want to save it for later, we can do that
         message_history = ActiveMessageHistory.query.get(session.message_history_id)
 
         db.session.delete(message_history)
@@ -1310,9 +1216,6 @@ def confirm_appointment():
     student = User.query.get(session_request.student)
     add_new_session(tutor_id=session_request.tutor,student_id=student.id,date = session_request.date.strftime('%Y-%m-%d'),period = session_request.period,request=False,repeating=False)
 
-    # temp = tutor.notifaction_data['deleted']
-    # student.notifaction_data['deleted'] = temp + [f'{student.username} confirmed the session with you on {new_session.date} at {str(new_session.start_time)[:-3]}']
-    # flag_modified(student, 'notifaction_data')
     db.session.delete(session_request)
     db.session.commit()
     flash("Session confirmed!","success")
@@ -1477,28 +1380,28 @@ def admin_temp_route():
         else:
             role = request.form.get("role")
             first_names = [
-                "Maria",     # Spanish/Latin
-                "James",     # English
-                "Sakura",    # Japanese
-                "Amit",      # Indian
-                "Liam",      # Irish
-                "Fatima",    # Arabic
-                "Chen",      # Chinese
-                "Olga",      # Russian
-                "Zara",      # Persian
-                "David"      # Hebrew
+                "Maria",     
+                "James",     
+                "Sakura",    
+                "Amit",      
+                "Liam",      
+                "Fatima",    
+                "Chen",      
+                "Olga",      
+                "Zara",      
+                "David"      
             ]
             last_names = [
-                "Garcia",    # Spanish
-                "Smith",     # English
-                "Nguyen",    # Vietnamese
-                "Patel",     # Indian
-                "Kowalski",  # Polish
-                "Alvarez",   # Spanish
-                "Olsen",     # Scandinavian
-                "Kim",       # Korean
-                "Hassan",    # Arabic
-                "Ivanov"     # Russian
+                "Garcia",    
+                "Smith",     
+                "Nguyen",    
+                "Patel",     
+                "Kowalski",  
+                "Alvarez",  
+                "Olsen",     
+                "Kim",       
+                "Hassan",    
+                "Ivanov"     
             ]
             num_users = len(User.query.all())
             for i in range(number):
@@ -1518,7 +1421,6 @@ def admin_temp_route():
                 db.session.add(user)
                 db.session.commit()
     return render_template("admin_temp_route.html",student_num = len(User.query.filter_by(role=0).all()),tutor_num = len(User.query.filter_by(role=1).all()),session_num = len(Session.query.all()))
-#dummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummydummy
 
 
 @app.route('/approve_hours')
@@ -1538,7 +1440,6 @@ def approve_hours():
 @email_verified_required
 def calendar():
 
-    #replace these dartes with the actual meeting dates when done
     meetings = {
         'teacher': ['2024-08-01', '2024-08-30', '2024-08-20'],
         'peer_tutor': ['2024-08-04', '2024-08-15', '2024-08-25']
@@ -1564,5 +1465,4 @@ def not_found(e):
 
 if __name__ == '__main__':
     app.secret_key = 'ben_does_not_suck'
-    #add a host="" to run on capcitor with flask-socketio
     socketio.run(app, port = 5000)

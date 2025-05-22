@@ -92,7 +92,6 @@ def make_square(image, size):
 
 def count_weekdays_between(start_date: datetime, end_date: datetime, weekday: int) -> int:
 
-    # start_date = start_date.date()
     end_date = end_date.date()
 
     current_date = start_date
